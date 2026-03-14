@@ -1,6 +1,6 @@
 {
   "name": "human-loop-mcp",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Browser-based human-in-the-loop MCP server — ask your AI agent to ask you via polished browser dialogs.",
   "license": "MIT",
