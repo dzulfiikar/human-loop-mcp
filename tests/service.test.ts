@@ -59,4 +59,55 @@ describe("HumanLoopService", () => {
       }),
     );
   });
+
+  it("forwards attachments from multiline dialog result", async () => {
+    const attachments = [
+      { name: "file.png", type: "image/png", size: 1024, data: "iVBORw0KGgo=" },
+    ];
+
+    const runtime = {
+      openDialog: vi.fn(async () => ({
+        action: "submit" as const,
+        value: "see attached",
+        attachments,
+      })),
+      health: vi.fn(),
+    };
+
+    const service = new HumanLoopService(runtime);
+
+    const result = await service.getMultilineInput({
+      title: "Upload",
+      prompt: "Attach files",
+    });
+
+    expect(result).toEqual({
+      action: "submit",
+      value: "see attached",
+      attachments,
+    });
+  });
+
+  it("omits attachments when multiline has none", async () => {
+    const runtime = {
+      openDialog: vi.fn(async () => ({
+        action: "submit" as const,
+        value: "no files",
+      })),
+      health: vi.fn(),
+    };
+
+    const service = new HumanLoopService(runtime);
+
+    const result = await service.getMultilineInput({
+      title: "Notes",
+      prompt: "Write something",
+    });
+
+    expect(result).toEqual({
+      action: "submit",
+      value: "no files",
+      attachments: undefined,
+    });
+  });
 });

@@ -1,4 +1,5 @@
 import type {
+  Attachment,
   ChoiceDialogDefinition,
   DialogDefinition,
   DialogResult,
@@ -90,6 +91,7 @@ export class HumanLoopService {
   async getMultilineInput(args: GetMultilineInputArgs): Promise<{
     action: DialogResult["action"];
     value: string | null;
+    attachments?: Attachment[];
   }> {
     const result = await this.runtime.openDialog({
       kind: "multiline",
@@ -101,6 +103,7 @@ export class HumanLoopService {
     return {
       action: result.action,
       value: "value" in result ? result.value : null,
+      attachments: "attachments" in result ? result.attachments : undefined,
     };
   }
 

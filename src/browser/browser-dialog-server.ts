@@ -6,6 +6,7 @@ import { join, relative } from "node:path";
 
 import {
   DialogSessionManager,
+  type Attachment,
   type DialogDefinition,
   type DialogResult,
 } from "./dialog-session-manager.js";
@@ -298,12 +299,26 @@ export class BrowserDialogServer {
 
     const values = form.getAll("values");
     const value = form.get("value") ?? undefined;
+    const rawAttachments = form.get("attachments") ?? undefined;
+
+    let attachments: Attachment[] | undefined;
+    if (rawAttachments) {
+      try {
+        const parsed = JSON.parse(rawAttachments);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          attachments = parsed as Attachment[];
+        }
+      } catch {
+        // Ignore malformed attachment data
+      }
+    }
 
     try {
       await this.sessions.submit(dialogId, {
         action,
         value,
         values: values.length > 0 ? values : undefined,
+        attachments,
       });
       this.redirect(response, "/thanks");
     } catch (error) {

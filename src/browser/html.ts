@@ -48,13 +48,27 @@ export function renderDialogPage(session: DialogPageModel): string {
         return `
           <label class="field">
             <span class="field-label">response</span>
-            <textarea
-              id="main-input"
-              name="value"
-              rows="10"
-              autofocus
-              placeholder="Type here… (use @ for files, # for issues, / for commands)"
-            >${escapeHtml(definition.defaultValue ?? "")}</textarea>
+            <div class="attach-zone" id="attach-zone">
+              <div class="drop-overlay">Drop files here</div>
+              <textarea
+                id="main-input"
+                name="value"
+                rows="10"
+                autofocus
+                placeholder="Type here… (use @ for files, # for issues, / for commands)"
+              >${escapeHtml(definition.defaultValue ?? "")}</textarea>
+            </div>
+            <div class="attach-bar">
+              <button type="button" class="attach-btn" id="attach-btn" title="Attach files">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                Attach
+              </button>
+              <input type="file" id="file-input" multiple hidden />
+              <span class="field-hint">drag &amp; drop · paste · click to attach (max 5 MB)</span>
+            </div>
+            <div class="attach-chips" id="attach-chips"></div>
+            <div class="attach-error" id="attach-error"></div>
+            <input type="hidden" name="attachments" id="attachments-field" value="" />
             <span class="field-hint">⌘Enter submit · Esc cancel · @ # / ? autocomplete</span>
           </label>
         `;
@@ -615,6 +629,141 @@ export function renderDialogPage(session: DialogPageModel): string {
         .actions { justify-content: flex-end; }
         .btn-hint { display: none; }
       }
+
+      /* Attachments */
+      .attach-zone {
+        position: relative;
+      }
+
+      .attach-zone.dragover textarea {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--input-focus-ring), var(--accent-glow);
+      }
+
+      .drop-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        border-radius: var(--radius);
+        background: var(--accent-subtle);
+        border: 2px dashed var(--accent);
+        z-index: 50;
+        place-items: center;
+        pointer-events: none;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--accent);
+      }
+
+      .attach-zone.dragover .drop-overlay {
+        display: grid;
+      }
+
+      .attach-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+      }
+
+      .attach-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border: 1px solid var(--input-border);
+        border-radius: var(--radius-sm);
+        background: var(--input-bg);
+        color: var(--text-secondary);
+        font-family: var(--mono);
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.1s ease;
+      }
+
+      .attach-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: var(--accent-subtle);
+      }
+
+      .attach-btn svg { flex-shrink: 0; }
+
+      .attach-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .attach-chips:empty { display: none; }
+
+      .attach-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 6px 4px 8px;
+        border-radius: var(--radius-sm);
+        background: var(--choice-bg);
+        border: 1px solid var(--surface-border);
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-primary);
+        max-width: 220px;
+        animation: appear 0.15s ease both;
+      }
+
+      .attach-chip-preview {
+        width: 22px;
+        height: 22px;
+        border-radius: 3px;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+
+      .attach-chip-info {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .attach-chip-size {
+        color: var(--text-tertiary);
+        font-size: 10px;
+      }
+
+      .attach-chip-remove {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border: none;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        padding: 0;
+        transition: all 0.1s;
+      }
+
+      .attach-chip-remove:hover {
+        background: var(--danger-bg);
+        color: var(--danger);
+      }
+
+      .attach-error {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--danger);
+        margin-top: 6px;
+        animation: shakeIn 0.3s ease;
+      }
     </style>
   </head>
   <body>
@@ -678,6 +827,159 @@ export function renderDialogPage(session: DialogPageModel): string {
         var textarea = document.getElementById('main-input');
         if (!textarea) return;
 
+        /* ── Attachment handling ────────────────────────────────────── */
+        var MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+        var attachments = [];
+        var attachZone = document.getElementById('attach-zone');
+        var attachBtn = document.getElementById('attach-btn');
+        var fileInput = document.getElementById('file-input');
+        var chipsEl = document.getElementById('attach-chips');
+        var errorEl = document.getElementById('attach-error');
+        var hiddenField = document.getElementById('attachments-field');
+
+        function formatSize(bytes) {
+          if (bytes < 1024) return bytes + ' B';
+          if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+          return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function showAttachError(msg) {
+          if (errorEl) { errorEl.textContent = msg; setTimeout(function() { errorEl.textContent = ''; }, 4000); }
+        }
+
+        function syncHiddenField() {
+          if (hiddenField) {
+            hiddenField.value = attachments.length > 0 ? JSON.stringify(attachments.map(function(a) {
+              return { name: a.name, type: a.type, size: a.size, data: a.data };
+            })) : '';
+          }
+        }
+
+        function renderChips() {
+          if (!chipsEl) return;
+          chipsEl.innerHTML = '';
+          attachments.forEach(function(att, idx) {
+            var chip = document.createElement('div');
+            chip.className = 'attach-chip';
+
+            if (att.type && att.type.startsWith('image/')) {
+              var img = document.createElement('img');
+              img.className = 'attach-chip-preview';
+              img.src = 'data:' + att.type + ';base64,' + att.data;
+              img.alt = att.name;
+              chip.appendChild(img);
+            }
+
+            var info = document.createElement('span');
+            info.className = 'attach-chip-info';
+            info.textContent = att.name;
+            chip.appendChild(info);
+
+            var size = document.createElement('span');
+            size.className = 'attach-chip-size';
+            size.textContent = formatSize(att.size);
+            chip.appendChild(size);
+
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'attach-chip-remove';
+            removeBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+            removeBtn.title = 'Remove';
+            removeBtn.setAttribute('data-index', idx);
+            removeBtn.addEventListener('click', function() {
+              attachments.splice(idx, 1);
+              syncHiddenField();
+              renderChips();
+            });
+            chip.appendChild(removeBtn);
+
+            chipsEl.appendChild(chip);
+          });
+        }
+
+        function addFiles(fileList) {
+          for (var i = 0; i < fileList.length; i++) {
+            (function(file) {
+              if (file.size > MAX_FILE_SIZE) {
+                showAttachError(file.name + ' exceeds 5 MB limit');
+                return;
+              }
+              var reader = new FileReader();
+              reader.onload = function() {
+                var base64 = reader.result.split(',')[1] || '';
+                attachments.push({
+                  name: file.name,
+                  type: file.type || 'application/octet-stream',
+                  size: file.size,
+                  data: base64,
+                });
+                syncHiddenField();
+                renderChips();
+              };
+              reader.onerror = function() {
+                showAttachError('Failed to read ' + file.name);
+              };
+              reader.readAsDataURL(file);
+            })(fileList[i]);
+          }
+        }
+
+        if (attachBtn && fileInput) {
+          attachBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.click();
+          });
+          fileInput.addEventListener('change', function() {
+            if (fileInput.files && fileInput.files.length > 0) {
+              addFiles(fileInput.files);
+              fileInput.value = '';
+            }
+          });
+        }
+
+        if (attachZone) {
+          var dragCounter = 0;
+          attachZone.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            dragCounter++;
+            attachZone.classList.add('dragover');
+          });
+          attachZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dragCounter--;
+            if (dragCounter <= 0) { dragCounter = 0; attachZone.classList.remove('dragover'); }
+          });
+          attachZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+          });
+          attachZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dragCounter = 0;
+            attachZone.classList.remove('dragover');
+            if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+              addFiles(e.dataTransfer.files);
+            }
+          });
+        }
+
+        textarea.addEventListener('paste', function(e) {
+          var items = e.clipboardData && e.clipboardData.items;
+          if (!items) return;
+          var files = [];
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].kind === 'file') {
+              var f = items[i].getAsFile();
+              if (f) files.push(f);
+            }
+          }
+          if (files.length > 0) {
+            e.preventDefault();
+            addFiles(files);
+          }
+        });
+
+        /* ── Autocomplete ──────────────────────────────────────────── */
+
         var TRIGGERS = {
           '@': { endpoint: '/api/files',     label: 'FILES',     icon: '~' },
           '#': { endpoint: '/api/issues',    label: 'ISSUES',    icon: '#' },
@@ -685,7 +987,7 @@ export function renderDialogPage(session: DialogPageModel): string {
           '?': { endpoint: '/api/shortcuts', label: 'SHORTCUTS', icon: '?' },
         };
 
-        var wrap = textarea.parentElement;
+        var wrap = attachZone || textarea.parentElement;
         if (wrap) wrap.classList.add('ac-wrap');
 
         var dropdown = document.createElement('div');

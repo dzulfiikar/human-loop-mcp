@@ -43,8 +43,15 @@ export type DialogDefinition =
   | ConfirmationDialogDefinition
   | InfoDialogDefinition;
 
+export interface Attachment {
+  name: string;
+  type: string;
+  size: number;
+  data: string;
+}
+
 export type DialogResult =
-  | { action: "submit"; value: string }
+  | { action: "submit"; value: string; attachments?: Attachment[] }
   | { action: "submit"; values: string[] }
   | { action: "confirm" }
   | { action: "cancel" }
@@ -54,6 +61,7 @@ export interface DialogSubmission {
   action?: string;
   value?: string;
   values?: string[];
+  attachments?: Attachment[];
 }
 
 export interface PendingDialogSession {
@@ -165,11 +173,16 @@ export class DialogSessionManager {
     switch (definition.kind) {
       case "input":
         return this.validateInput(definition, submission);
-      case "multiline":
-        return {
+      case "multiline": {
+        const result: DialogResult = {
           action: "submit",
           value: submission.value ?? "",
         };
+        if (submission.attachments && submission.attachments.length > 0) {
+          result.attachments = submission.attachments;
+        }
+        return result;
+      }
       case "choice":
         return this.validateChoice(definition, submission);
       case "confirmation":
