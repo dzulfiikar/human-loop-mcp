@@ -142,7 +142,7 @@ export class BrowserDialogServer {
       this.respondHtml(
         response,
         200,
-        "<!doctype html><html><body><h1>Human Loop MCP TS</h1></body></html>",
+        "<!doctype html><html><body><h1>Human Loop MCP</h1></body></html>",
       );
       return;
     }

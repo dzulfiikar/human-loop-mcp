@@ -154,7 +154,7 @@ export class HumanLoopService {
     return {
       status: health.status,
       gui_available: health.guiAvailable,
-      server_name: "Human Loop MCP TS",
+      server_name: "Human Loop MCP",
       platform: process.platform,
       base_url: health.baseUrl,
       tools_available: [

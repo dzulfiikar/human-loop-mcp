@@ -1,5 +1,5 @@
 {
-  "name": "human-loop-mcp-ts",
+  "name": "human-loop-mcp",
   "version": "0.1.0",
   "type": "module",
   "description": "Browser-based human-in-the-loop MCP server — ask your AI agent to ask you via polished browser dialogs.",
@@ -7,11 +7,11 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dzulfiikar/human-loop-mcp-ts.git"
+    "url": "https://github.com/dzulfiikar/human-loop-mcp.git"
   },
-  "homepage": "https://github.com/dzulfiikar/human-loop-mcp-ts#readme",
+  "homepage": "https://github.com/dzulfiikar/human-loop-mcp#readme",
   "bugs": {
-    "url": "https://github.com/dzulfiikar/human-loop-mcp-ts/issues"
+    "url": "https://github.com/dzulfiikar/human-loop-mcp/issues"
   },
   "keywords": [
     "mcp",
@@ -46,7 +46,7 @@
     }
   },
   "bin": {
-    "human-loop-mcp-ts": "./dist/index.js"
+    "human-loop-mcp": "./dist/index.js"
   },
   "files": [
     "dist",

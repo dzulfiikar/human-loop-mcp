@@ -1,12 +1,12 @@
 # Contributing
 
-Thanks for your interest in contributing to **human-loop-mcp-ts**!
+Thanks for your interest in contributing to **human-loop-mcp**!
 
 ## Development Setup
 
 ```bash
-git clone https://github.com/dzulfiikar/human-loop-mcp-ts.git
-cd human-loop-mcp-ts
+git clone https://github.com/dzulfiikar/human-loop-mcp.git
+cd human-loop-mcp
 npm install
 ```
 
@@ -56,7 +56,7 @@ Each layer has a clear responsibility — keep them separated.
 
 ## Reporting Issues
 
-Open a [GitHub Issue](https://github.com/dzulfiikar/human-loop-mcp-ts/issues) with:
+Open a [GitHub Issue](https://github.com/dzulfiikar/human-loop-mcp/issues) with:
 - Steps to reproduce
 - Expected vs actual behavior
 - Node.js version and OS

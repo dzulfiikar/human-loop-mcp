@@ -31,8 +31,8 @@ export async function createServer(): Promise<McpServer> {
   const service = new HumanLoopService(dialogRuntime);
 
   const server = new McpServer({
-    name: "human-loop-mcp-ts",
-    version: "0.1.0",
+    name: "human-loop-mcp",
+    version: "1.0.0",
   });
 
   server.registerTool(

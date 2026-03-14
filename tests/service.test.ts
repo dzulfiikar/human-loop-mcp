@@ -55,7 +55,7 @@ describe("HumanLoopService", () => {
       expect.objectContaining({
         status: "healthy",
         gui_available: true,
-        server_name: "Human Loop MCP TS",
+        server_name: "Human Loop MCP",
       }),
     );
   });
