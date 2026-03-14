@@ -1,0 +1,73 @@
+{
+  "name": "human-loop-mcp-ts",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Browser-based human-in-the-loop MCP server — ask your AI agent to ask you via polished browser dialogs.",
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dzulfiikar/human-loop-mcp-ts.git"
+  },
+  "homepage": "https://github.com/dzulfiikar/human-loop-mcp-ts#readme",
+  "bugs": {
+    "url": "https://github.com/dzulfiikar/human-loop-mcp-ts/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "human-in-the-loop",
+    "browser",
+    "dialog",
+    "ai",
+    "agent",
+    "claude",
+    "copilot",
+    "cursor"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./browser/browser-dialog-server": {
+      "import": "./dist/browser/browser-dialog-server.js",
+      "types": "./dist/browser/browser-dialog-server.d.ts"
+    },
+    "./browser/dialog-session-manager": {
+      "import": "./dist/browser/dialog-session-manager.js",
+      "types": "./dist/browser/dialog-session-manager.d.ts"
+    },
+    "./service": {
+      "import": "./dist/service.js",
+      "types": "./dist/service.d.ts"
+    }
+  },
+  "bin": {
+    "human-loop-mcp-ts": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
